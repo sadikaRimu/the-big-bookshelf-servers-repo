@@ -40,6 +40,42 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'Admin' });
         });
+        app.get('/users/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await usersCollection.findOne(query);
+            res.send({ isSeller: user?.role === 'Seller' });
+        });
+        app.get('/users/seller', async (req, res) => {
+            const query = { role: 'Seller' };
+            const user = await usersCollection.find(query).toArray();
+            // console.log(user);
+            //res.send({ isSeller: user?.role === 'Seller' });
+            res.send(user);
+        });
+        app.get('/users/buyer', async (req, res) => {
+            const query = { role: 'Buyer' };
+            const user = await usersCollection.find(query).toArray();
+            res.send(user);
+        });
+        app.put('/users/seller/:id', async (req, res) => {
+            // const decodedEmail = req.decoded.email;
+            // const query = { email: decodedEmail };
+            // const user = await usersCollection.findOne(query);
+            // if (user?.role !== 'admin') {
+            //     return res.status(403).send({ message: 'forbidden access' })
+            // }
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: 'Verified'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
         app.put('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
             // const filter = { _id: ObjectId(id) }
@@ -66,9 +102,43 @@ async function run() {
             const result = await booksCategoryCollection.find(query).project({ name: 1 }).toArray();
             res.send(result);
         });
+        //get method for my products
+        app.get('/books', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const books = await booksCollection.find(query).toArray();
+            console.log(books);
+            res.send(books);
+        });
+        // get method for addvertise product
+        app.get('/books/addvertise', async (req, res) => {
+            // const email = req.query.email;
+            const query = { advertise: 'Advertised' };
+            const books = await booksCollection.find(query).toArray();
+            console.log(books);
+            res.send(books);
+        });
+        app.get('/books/:name', async (req, res) => {
+            const name = req.params.name;
+            const query = { booksCategory: name };
+            const books = await booksCollection.find(query).toArray();
+            res.send(books);
+        });
         app.post('/books', async (req, res) => {
             const book = req.body;
             const result = await booksCollection.insertOne(book);
+            res.send(result);
+        });
+        app.put('/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    advertise: 'Advertised'
+                }
+            }
+            const result = await booksCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
     }
