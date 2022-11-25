@@ -22,6 +22,7 @@ async function run() {
         const usersCollection = client.db('assignment12db').collection('users');
         const booksCategoryCollection = client.db('assignment12db').collection('booksCategory');
         const booksCollection = client.db('assignment12db').collection('books');
+        const bookingCollection = client.db('assignment12db').collection('bookingItems');
 
 
         app.get('/users', async (req, res) => {
@@ -39,6 +40,12 @@ async function run() {
             const query = { email };
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'Admin' });
+        });
+        app.get('/users/verified/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await usersCollection.findOne(query);
+            res.send({ isVerified: user?.status === 'Verified' });
         });
         app.get('/users/seller/:email', async (req, res) => {
             const email = req.params.email;
@@ -115,7 +122,7 @@ async function run() {
             // const email = req.query.email;
             const query = { advertise: 'Advertised' };
             const books = await booksCollection.find(query).toArray();
-            console.log(books);
+            // console.log(books);
             res.send(books);
         });
         app.get('/books/:name', async (req, res) => {
@@ -139,6 +146,25 @@ async function run() {
                 }
             }
             const result = await booksCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+        //updated book status
+        app.put('/books/status/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: 'Booked'
+                }
+            }
+            const result = await booksCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+        app.post('/booking', async (req, res) => {
+            const booking = req.body;
+            const result = await bookingCollection.insertOne(booking);
             res.send(result);
         });
     }
