@@ -41,6 +41,12 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'Admin' });
         });
+        app.get('/users/buyer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await usersCollection.findOne(query);
+            res.send({ isBuyer: user?.role === 'Buyer' });
+        });
         app.get('/users/verified/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email };
@@ -128,6 +134,7 @@ async function run() {
         app.get('/books/:name', async (req, res) => {
             const name = req.params.name;
             const query = { booksCategory: name };
+
             const books = await booksCollection.find(query).toArray();
             res.send(books);
         });
@@ -165,6 +172,26 @@ async function run() {
         app.post('/booking', async (req, res) => {
             const booking = req.body;
             const result = await bookingCollection.insertOne(booking);
+            res.send(result);
+        });
+        app.get('/books/:booksCategory', async (req, res) => {
+            const booksCategory = req.params.booksCategory
+            const query = { booksCategory };
+            const item = await booksCollection.findOne(query);
+            res.send({ isBooked: item?.status === 'Booked' });
+
+        })
+        app.get('/wishList/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const item = await bookingCollection.find(query).toArray();
+            res.send(item);
+
+        });
+        app.delete('/wishList/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await bookingCollection.deleteOne(query);
             res.send(result);
         });
     }
