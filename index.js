@@ -41,6 +41,20 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'Admin' });
         });
+        //social login
+        app.get('/users/socialUser/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await usersCollection.findOne(query);
+            console.log(user);
+            if (user) {
+                res.send(true);
+            }
+            else {
+                res.send(false);
+            }
+
+        });
         app.get('/users/buyer/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email };
@@ -89,7 +103,7 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
-        app.put('/users/admin/:id', async (req, res) => {
+        app.put('/users/makeAdmin/:id', async (req, res) => {
             const id = req.params.id;
             // const filter = { _id: ObjectId(id) }
             // const options = { upsert: true };
@@ -100,15 +114,17 @@ async function run() {
             // }
             // const result = await usersCollection.updateOne(filter, updatedDoc, options);
             // res.send(result);
-            // const filter = { _id: ObjectId(id) };
-            // const options = { upsert: true };
-            // const updatedDoc = {
-            //     $set: {
-            //         role: 'Admin'
-            //     }
-            // }
-            // const result = await usersCollection.updatedOne(filter, updatedDoc, options);
-            // res.send(result);
+            const filter = { _id: ObjectId(id) };
+            // const userRole = req.body;
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: "Admin"
+                }
+            }
+            const result = await usersCollection.updatedOne(filter, options, updatedDoc);
+            console.log(result);
+            res.send(result);
         });
         app.get('/booksCategory', async (req, res) => {
             const query = {};
@@ -134,8 +150,13 @@ async function run() {
         app.get('/books/:name', async (req, res) => {
             const name = req.params.name;
             const query = { booksCategory: name };
-
             const books = await booksCollection.find(query).toArray();
+            const query2 = books.map(book => {
+                const bookedIem = { available: book.status !== 'Booked' }
+                return bookedIem;
+            });
+            //const books2 = await booksCollection.find(query2).toArray();
+            console.log(query);
             res.send(books);
         });
         app.post('/books', async (req, res) => {
