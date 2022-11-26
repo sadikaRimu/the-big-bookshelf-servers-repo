@@ -46,7 +46,6 @@ async function run() {
             const email = req.params.email;
             const query = { email };
             const user = await usersCollection.findOne(query);
-            console.log(user);
             if (user) {
                 res.send(true);
             }
@@ -86,12 +85,6 @@ async function run() {
             res.send(user);
         });
         app.put('/users/seller/:id', async (req, res) => {
-            // const decodedEmail = req.decoded.email;
-            // const query = { email: decodedEmail };
-            // const user = await usersCollection.findOne(query);
-            // if (user?.role !== 'admin') {
-            //     return res.status(403).send({ message: 'forbidden access' })
-            // }
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true };
@@ -105,24 +98,15 @@ async function run() {
         });
         app.put('/users/makeAdmin/:id', async (req, res) => {
             const id = req.params.id;
-            // const filter = { _id: ObjectId(id) }
-            // const options = { upsert: true };
-            // const updatedDoc = {
-            //     $set: {
-            //         role: 'admin'
-            //     }
-            // }
-            // const result = await usersCollection.updateOne(filter, updatedDoc, options);
-            // res.send(result);
             const filter = { _id: ObjectId(id) };
-            // const userRole = req.body;
-            const options = { upsert: true };
+            const userRole = req.body;
+            const option = { upsert: true };
             const updatedDoc = {
                 $set: {
-                    role: "Admin"
+                    role: userRole.role
                 }
             }
-            const result = await usersCollection.updatedOne(filter, options, updatedDoc);
+            const result = await usersCollection.updateOne(filter, updatedDoc, option);
             console.log(result);
             res.send(result);
         });
