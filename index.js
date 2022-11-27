@@ -149,7 +149,7 @@ async function run() {
         // get method for addvertise product
         app.get('/books/addvertise', async (req, res) => {
             // const email = req.query.email;
-            const query = { advertise: 'Advertised' };
+            const query = { advertise: 'Advertised', status: 'Available' };
             const books = await booksCollection.find(query).toArray();
             // console.log(books);
             res.send(books);
@@ -249,17 +249,32 @@ async function run() {
         app.post('/payments', async (req, res) => {
             const payment = req.body;
             const result = await payCollection.insertOne(payment);
-            const id = payment.bookId;
+            const id = payment.bookingId;
             const filter = { _id: ObjectId(id) };
+            const option = { upsert: true }
             const updateDoc = {
                 $set: {
                     status: 'Paid',
                     transactionId: payment.transactionId
                 }
             }
-            const updateResult = await bookingCollection.updateOne(filter, updateDoc);
+            const updateResult = await bookingCollection.updateOne(filter, updateDoc, option);
+            console.log(updateResult);
             res.send(result);
-        })
+        });
+        //update paid item in booksCollection
+        app.put('/books/payments/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: 'Sold'
+                }
+            }
+            const result = await booksCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
     }
     finally {
 
