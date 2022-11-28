@@ -179,11 +179,11 @@ async function run() {
             const name = req.params.name;
             const query = { booksCategory: name, status: 'Available' };
             const books = await booksCollection.find(query).toArray();
-            const query2 = books.map(book => {
-                const bookedIem = { available: book.status !== 'Booked' }
-                return bookedIem;
-            });
-            console.log(query);
+            // const query2 = books.map(book => {
+            //     const bookedIem = { available: book.status !== 'Booked' }
+            //     return bookedIem;
+            // });
+            // console.log(query);
             res.send(books);
         });
         app.post('/books', async (req, res) => {
@@ -191,7 +191,14 @@ async function run() {
             const result = await booksCollection.insertOne(book);
             res.send(result);
         });
-        app.put('/books/:id', async (req, res) => {
+        //book collection delete
+        app.delete('/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await booksCollection.deleteOne(query);
+            res.send(result);
+        });
+        app.put('/books/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true };
@@ -217,6 +224,20 @@ async function run() {
             const result = await booksCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
+        //update status for reported item
+        app.put('/books/report/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: 'Reported'
+                }
+            }
+            const result = await booksCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
         //get bookingItem by id for payment
         app.get('/bookingItems/:id', async (req, res) => {
             const id = req.params.id;
@@ -236,13 +257,17 @@ async function run() {
             const item = await booksCollection.findOne(query);
             res.send({ isBooked: item?.status === 'Booked' });
 
+        });
+        //delete bookingItem with books collection
+        app.delete('/booking/books/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { bookId: id }
+            const result = await bookingCollection.deleteOne(query);
+            res.send(result);
         })
         app.get('/wishList/:email', verifyJWT, async (req, res) => {
             const decoded = req.decoded;
-            console.log('inside orders api', decoded);
-            // if (decoded.email !== req.query.email) {
-            //     res.status(403).send({ message: 'unauthorized access' });
-            // }
+            //console.log('inside orders api', decoded);
             const email = req.params.email;
             const query = { email: email };
             const item = await bookingCollection.find(query).toArray();
@@ -301,6 +326,18 @@ async function run() {
             const result = await booksCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
+        //get reported items
+        app.get('/reportItems', async (req, res) => {
+            const query = { status: 'Reported' };
+            const books = await booksCollection.find(query).toArray();
+            res.send(books);
+        });
+        //get method for axios
+        app.get('/allbooks', async (req, res) => {
+            const query = {};
+            const result = await booksCollection.find(query).toArray();
+            res.send(result);
+        })
     }
     finally {
 
